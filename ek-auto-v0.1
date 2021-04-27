@@ -1,0 +1,145 @@
+function myFunction() {
+
+ //OPEN THE DATA DUMP SPREADSHEET
+ //--copy and paste the url of the data dump spreadsheet into the parantheses, between quotes.
+ //--ex. SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1bqRz3MHf6r92n7zJS6WoNMuglPuxP2XguF4pCvOaJMM/edit#gid=1708719369"); 
+
+  var xs = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1PUjzlyfU28-PmllG5RVv9rmnfme42MILlAgHAZby13c/edit#gid=1216120504"); 
+  
+  
+  //Logger.log(xs.getName());
+  var ss = SpreadsheetApp.getActiveSheet(); //open master sheet
+
+
+var xsSheets = xs.getSheetByName("RawData"); //sheet from data dump we will work with
+
+//variables for column data
+var courseCode = xs.getRange("B2").getValue();
+var courseTitle = xs.getRange("C2").getValue().toString().substring(8); //this will remove the first 8 characters of the string so only the course title appears w/o course code
+var instructorName = xs.getRange("E2").getValue();
+var termInfo;
+var acYr;
+var prog;
+var instEffective;
+var LikelyRec;
+var NPS;
+
+
+
+//this function will be to calculate the "likely to recommend" average aka Question 19
+function recAvg()
+{
+
+  var rowValues;
+  var lastRow = xsSheets.getLastRow(); //gets the position of the last row with data
+  var numRows = lastRow - 1; //gets the number of rows with data
+  var dataDumpRows = xsSheets.getDataRange().getValues(); //gets the data in the data dump sheet
+  var sumRows = 0;
+  var avgRows = 0;
+
+
+  //sum and average the data for question 19 - likelihood to recommend the course
+  for(var i = 0; i < numRows; i++) 
+  {
+        sumRows = sumRows + dataDumpRows[i+1][33];
+     
+        
+  }
+    avgRows = sumRows/numRows;
+    //Logger.log(avgRows);
+    return avgRows;
+
+}
+
+LikelyRec = recAvg(); //send question 19 data into variable
+
+//this function will be to calculate the "instructor effectiveness" average aka Question 4
+function effAvg()
+{
+
+  var rowValues;
+  var lastRow = xsSheets.getLastRow(); //gets the position of the last row with data
+  var numRows = lastRow - 1; //gets the number of rows with data
+  var dataDumpRows = xsSheets.getDataRange().getValues(); //gets the data in the data dump sheet
+  var sumRows = 0;
+  var avgRows = 0;
+
+
+  //sum and average the data for question 26 - likelihood to recommend the course
+  for(var i = 0; i < numRows; i++) 
+  {
+        sumRows = sumRows + dataDumpRows[i+1][11];
+     
+        
+  }
+    avgRows = sumRows/numRows;
+    
+    //Logger.log(avgRows);
+    return avgRows;
+
+}
+
+instEffective = effAvg(); //send question 4 into a variable
+
+
+//this function will be to calculate the NPS score based on question 26
+function npsAvg()
+{
+
+  var rowValues;
+  var lastRow = xsSheets.getLastRow(); //gets the position of the last row with data
+  var numRows = lastRow - 1; //gets the number of rows with data
+  var dataDumpRows = xsSheets.getDataRange().getValues(); //gets the data in the data dump sheet
+  var posAns = 0;
+  var negAns = 0;
+  var npsScore = 0;
+  var value;
+
+
+  //calculate the number of answers that are 9-10 and 0-6;
+  for(var i = 0; i < numRows; i++) 
+  {
+    value = dataDumpRows[i+1][33];
+        if(value >= 9){
+          posAns++;
+
+        }
+        else if(value <= 6){
+          negAns++;
+        }
+     
+  }
+    npsScore = ((posAns/numRows) - (negAns/numRows))*100; //calculates the NPS
+    return npsScore;
+
+}
+
+NPS = npsAvg(); //send NPS score to varaible
+
+ss.getRange("G:H").setNumberFormat("0.00"); //set the format to display data to two decimal places
+ss.getRange("I:I").setNumberFormat("0"); //set the format to display data with no decimals
+
+//this function is to enter the information not already contained in the data dump file
+function addData(term, acadYear, program){
+  termInfo = term;
+  acYr = acadYear;
+  prog = program;
+
+
+}
+
+//MANUALLY ENTER THE RELEVANT DATA IN THE FUNCTION HERE//
+//Format: addData(Term, academic year, program);
+//--values should be in quotes
+//ex. addData("Summer", "21-22", "oMDR");
+
+addData("Fall", "21-22", "oMDR");
+
+//data for our row to append to the master sheet
+var rowData = [termInfo, acYr, prog, courseCode, courseTitle, instructorName, instEffective, LikelyRec, NPS];
+
+//add the data to the master sheet - this will update the sheet
+ ss.appendRow(rowData);
+
+
+}
